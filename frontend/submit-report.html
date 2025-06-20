@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Submit Emergency - Veerangana</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f9f9fb;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #e91e63;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #e91e63;
+    }
+    form {
+      background: white;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #e91e63;
+      color: white;
+      font-weight: bold;
+      border: none;
+    }
+    .report {
+      background: white;
+      max-width: 600px;
+      margin: 15px auto;
+      padding: 15px;
+      border-left: 6px solid #f06292;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .report.resolved {
+      border-left-color: #81c784;
+      background-color: #eafaf1;
+    }
+    .report button {
+      padding: 8px 12px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Veerangana</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+            <a href="#">Panic Button</a>
+                  <a href="#">Rights</a>
+
+
+    </nav>
+  </header>
+
+  <h2>🚨 Submit Emergency Report</h2>
+  <form id="reportForm">
+    <input type="text" id="name" placeholder="Your Name" required />
+    <input type="text" id="phone" placeholder="Phone Number" required />
+    <input type="text" id="location" placeholder="Location" required />
+    <select id="emergencyType" required>
+      <option value="" disabled selected>Select Emergency Type</option>
+      <option value="Harassment">Harassment</option>
+      <option value="Stalking">Stalking</option>
+      <option value="Domestic Violence">Domestic Violence</option>
+      <option value="Other">Other</option>
+    </select>
+    <button type="submit">Submit Report</button>
+  </form>
+
+  <h2>📋 Emergency Reports</h2>
+  <div id="reportList"></div>
+
+  <script>
+    const apiBase = "http://localhost:5000/api/reports";
+
+    async function fetchReports() {
+      const res = await fetch(apiBase);
+      const data = await res.json();
+      const list = document.getElementById("reportList");
+      list.innerHTML = "";
+
+      data.forEach((report) => {
+        const div = document.createElement("div");
+        div.className = `report ${report.status === "Resolved" ? "resolved" : ""}`;
+        div.innerHTML = `
+          <strong>${report.name}</strong> (${report.emergencyType})<br>
+          📍 ${report.location}<br>
+          📞 ${report.phone}<br>
+          <em>Status: ${report.status}</em><br><br>
+          <button onclick="markResolved('${report._id}')">✅ Mark Resolved</button>
+          <button onclick="deleteReport('${report._id}')">🗑️ Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    document.getElementById("reportForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        location: document.getElementById("location").value,
+        emergencyType: document.getElementById("emergencyType").value
+      };
+      await fetch(apiBase, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      e.target.reset();
+      fetchReports();
+    });
+
+    async function markResolved(id) {
+      await fetch(`${apiBase}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Resolved" })
+      });
+      fetchReports();
+    }
+
+    async function deleteReport(id) {
+      await fetch(`${apiBase}/${id}`, { method: "DELETE" });
+      fetchReports();
+    }
+
+    fetchReports();
+  </script>
+</body>
+</html>
