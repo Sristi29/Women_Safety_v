@@ -1,0 +1,16 @@
+services:
+  app:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - KEPLOY_MODE=record
+    depends_on:
+      - keploy
+
+  keploy:
+    image: ghcr.io/keploy/keploy:latest
+    ports:
+      - "6789:6789"
+    volumes:
+      - ./keploy:/app/keploy
